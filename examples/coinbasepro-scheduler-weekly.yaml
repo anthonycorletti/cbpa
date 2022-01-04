@@ -1,0 +1,27 @@
+---
+api:
+  key: "myKey"
+  secret: "mySecret"
+  passphrase: "myPassphrase"
+  url: "https://api.pro.coinbase.com"
+schedulers:
+  - name: "weekly purchases"
+    frequency: weekly
+    schedule:
+      day: monday
+      time: "07:00"
+    account:
+      auto_funding_enabled: true
+      auto_funding_limit: 420
+      fiat_currency: USD
+      source: default
+    buys:
+      - send_currency: USD
+        send_amount: 100
+        receive_currency: BTC
+      - send_currency: USD
+        send_amount: 100
+        receive_currency: ETH
+      - send_currency: USD
+        send_amount: 69
+        receive_currency: DOGE
