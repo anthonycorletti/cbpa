@@ -9,10 +9,10 @@ class CCC(str, Enum):
     ETH = "ETH"
     DOGE = "DOGE"
     SHIB = "SHIB"
-    # MANA = "MANA"
-    # AVAX = "AVAX"
-    # SOL = "SOL"
-    # XTZ = "XTZ"
+    MANA = "MANA"
+    AVAX = "AVAX"
+    SOL = "SOL"
+    XTZ = "XTZ"
 
 
 @unique
@@ -20,5 +20,5 @@ class FCC(str, Enum):
     """FCC stands for _F_iat _C_urrency _C_ode"""
 
     USD = "USD"
-    # GBP = "GBP"
-    # EUR = "EUR"
+    GBP = "GBP"
+    EUR = "EUR"
