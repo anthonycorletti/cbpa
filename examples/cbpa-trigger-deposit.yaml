@@ -13,8 +13,8 @@ buys:
     send_amount: 100
     receive_currency: BTC
   - send_currency: USD
-    send_amount: 25
+    send_amount: 200
     receive_currency: ETH
   - send_currency: USD
-    send_amount: 25
+    send_amount: 50
     receive_currency: DOGE

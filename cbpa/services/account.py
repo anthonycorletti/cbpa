@@ -59,7 +59,7 @@ class AccountService:
             return AddFundsResponse(status="Error", message=message)
         else:
             fund_amount = buy_total - current_funds
-            if current_funds == 0:
+            if current_funds > 1:
                 fund_amount = max_fund
             fund_message = (
                 f"Your balance is {current_funds} {fiat}. "

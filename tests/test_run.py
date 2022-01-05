@@ -22,7 +22,7 @@ def test_timezone() -> None:
     "cbpa.services.discord.DiscordService.send_alert",
     return_value=None,
 )
-def test_main_with_alerts(
+def test_run_with_alerts(
     mock_discord_service: mock.MagicMock,
     mock_coinbase_client: mock.MagicMock,
     mock_args: mock.MagicMock,
@@ -42,7 +42,7 @@ def test_main_with_alerts(
     "cbpa.services.discord.DiscordService.send_alert",
     return_value=None,
 )
-def test_main_without_alerts(
+def test_run_without_alerts(
     mock_discord_service: mock.MagicMock,
     mock_coinbase_client: mock.MagicMock,
     mock_args: mock.MagicMock,
@@ -62,7 +62,7 @@ def test_main_without_alerts(
     "cbpa.services.discord.DiscordService.send_alert",
     return_value=None,
 )
-def test_main_trigger_over_limit(
+def test_run_trigger_over_limit(
     mock_discord_service: mock.MagicMock,
     mock_coinbase_client: mock.MagicMock,
     mock_args: mock.MagicMock,
@@ -82,7 +82,7 @@ def test_main_trigger_over_limit(
     "cbpa.services.discord.DiscordService.send_alert",
     return_value=None,
 )
-def test_main_trigger_deposit(
+def test_run_trigger_deposit(
     mock_discord_service: mock.MagicMock,
     mock_coinbase_client: mock.MagicMock,
     mock_args: mock.MagicMock,

@@ -57,17 +57,17 @@ pyenv rehash
 
 ## Running
 
-First, create your schedule file. You can find examples in the [examples dir](./examples).
+First, create your config file. You can find examples in the [examples dir](./examples).
 
-To run the scheduler with just python;
+To run this with python;
 
 ```sh
-python cbpa/main.py -f path-to-my-schedule/file.yaml
+python cbpa/main.py -f config.yaml
 ```
 
-To run the scheduler with docker;
+To run with docker;
 
 ```sh
 ./scripts/docker-build.sh
-./scripts/docker-run.sh path-to-my-schedule/file.yaml
+./scripts/docker-run.sh config.yaml
 ```
