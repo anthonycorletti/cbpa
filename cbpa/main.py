@@ -1,5 +1,6 @@
 import argparse
 import os
+from datetime import datetime
 
 import coinbasepro
 
@@ -10,7 +11,7 @@ from cbpa.services.buy import BuyService
 from cbpa.services.config import ConfigService
 from cbpa.services.discord import DiscordService
 
-os.environ["TZ"] = "America/New_York"
+os.environ["TZ"] = "UTC"
 
 
 def get_args() -> argparse.Namespace:
@@ -64,10 +65,13 @@ def create_buy_service(
 
 
 def main() -> None:
-    logger.info("🤖 Starting cbpa.")
+    start = datetime.now()
     args = get_args()
     config = create_config(args=args)
     discord_service = DiscordService()
+    start_message = f"🤖 Starting cbpa ({start.isoformat()})"
+    logger.info(start_message)
+    discord_service.send_alert(config=config, message=start_message)
     coinbasepro_client = create_coinbasepro_auth_client(config=config)
     account_service = create_account_service(
         config=config, coinbasepro_client=coinbasepro_client
@@ -123,6 +127,11 @@ def main() -> None:
             run()
 
     run()
+    end = datetime.now()
+    duration = end - start
+    end_message = f"👏 Completed! Ran for {duration.total_seconds()} seconds."
+    logger.info(end_message)
+    discord_service.send_alert(config=config, message=end_message)
 
 
 if __name__ == "__main__":

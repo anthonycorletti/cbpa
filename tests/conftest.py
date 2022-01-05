@@ -4,7 +4,7 @@ import pytest
 
 from cbpa.services.config import ConfigService
 
-os.environ["TZ"] = "America/New_York"
+os.environ["TZ"] = "UTC"
 config_service = ConfigService()
 
 

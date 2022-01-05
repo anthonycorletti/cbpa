@@ -7,7 +7,7 @@ from tests.mocks import MockCoinbaseClient
 
 
 def test_timezone() -> None:
-    assert os.environ["TZ"] == "America/New_York"
+    assert os.environ["TZ"] == "UTC"
 
 
 @mock.patch(
