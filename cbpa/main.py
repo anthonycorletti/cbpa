@@ -1,5 +1,6 @@
 import argparse
 import os
+import traceback
 from datetime import datetime
 
 import coinbasepro
@@ -119,17 +120,15 @@ def main() -> None:
                             )
             if not all(done.values()):
                 run()
-        except Exception as e:
-            logger.error(e)
-            discord_service.send_alert(
-                config=config, message=f"🚨 Error while in run loop; {e}. Retrying."
-            )
+        except Exception:
+            logger.error("Unhandled general exception occurred.")
+            logger.error(traceback.format_exc())
             run()
 
     run()
     end = datetime.now()
     duration = end - start
-    end_message = f"👏 Completed! Ran for {duration.total_seconds()} seconds."
+    end_message = f"🤖 cbpa completed! Ran for {duration.total_seconds()} seconds."
     logger.info(end_message)
     discord_service.send_alert(config=config, message=end_message)
 

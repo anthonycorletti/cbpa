@@ -9,7 +9,7 @@ def create_logger() -> logging.Logger:
     logging.basicConfig(
         format=(
             f"[%(asctime)s.%(msecs)03d {tz}] "
-            f"[%(process)s] [{socket.gethostname()}] [%(module)s L%(lineno)d] "
+            f"[%(process)s] [{socket.gethostname()}] [%(pathname)s L%(lineno)d] "
             "[%(levelname)s] %(message)s"
         ),
         level=os.environ.get("LOGLEVEL", "INFO").upper(),
