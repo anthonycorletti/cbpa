@@ -59,7 +59,12 @@ pyenv rehash
 
 First, create your config file. You can find examples in the [examples dir](./examples).
 
-To run this with python;
+You will need to create a Coinbase Pro API Key and, optionally, a discord webhook.
+
+- [Create a Coinbase API Key](https://help.coinbase.com/en/pro/other-topics/api/how-do-i-create-an-api-key-for-coinbase-pro)
+- [Create a Discord webhook](https://support.discord.com/hc/en-us/articles/228383668-Intro-to-Webhooks)
+
+Then, after you filled in all the values in your `config.yaml`, run this;
 
 ```sh
 python cbpa/main.py -f config.yaml
