@@ -1,5 +1,5 @@
-# coinbasepro_scheduler
+# cbpa
 
-Automate Coinbase Pro buys from a default bank account or coinbase account.
+Coinbase Pro Automation for making buy orders from a default bank account.
 
 Checkout the [contributing guide](./CONTRIBUTING.md) to get started.

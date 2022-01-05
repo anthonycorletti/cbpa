@@ -20,5 +20,3 @@ class FCC(str, Enum):
     """FCC stands for _F_iat _C_urrency _C_ode"""
 
     USD = "USD"
-    GBP = "GBP"
-    EUR = "EUR"

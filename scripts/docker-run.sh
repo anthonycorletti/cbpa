@@ -1,3 +1,3 @@
 #!/bin/sh -e
 
-docker run -d cbps python coinbasepro_scheduler/main.py -f ${@}
+docker run -d cbps python cbpa/main.py -f ${@}

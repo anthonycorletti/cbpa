@@ -2,7 +2,7 @@ import os
 
 import pytest
 
-from coinbasepro_scheduler.services.config import ConfigService
+from cbpa.services.config import ConfigService
 
 os.environ["TZ"] = "America/New_York"
 config_service = ConfigService()

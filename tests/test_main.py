@@ -2,7 +2,8 @@ import argparse
 import os
 from unittest import mock
 
-from coinbasepro_scheduler.main import main
+from cbpa.main import main
+from tests.mocks import MockCoinbaseClient
 
 
 def test_timezone() -> None:
@@ -11,33 +12,79 @@ def test_timezone() -> None:
 
 @mock.patch(
     "argparse.ArgumentParser.parse_args",
-    return_value=argparse.Namespace(f="./examples/coinbasepro-scheduler-daily.yaml"),
+    return_value=argparse.Namespace(f="./examples/cbpa.yaml"),
 )
-def test_main_daily(mock_args: mock.MagicMock) -> None:
+@mock.patch(
+    "cbpa.main.create_coinbasepro_auth_client",
+    return_value=MockCoinbaseClient(),
+)
+@mock.patch(
+    "cbpa.services.discord.DiscordService.send_alert",
+    return_value=None,
+)
+def test_main_with_alerts(
+    mock_discord_service: mock.MagicMock,
+    mock_coinbase_client: mock.MagicMock,
+    mock_args: mock.MagicMock,
+) -> None:
     main()
 
 
 @mock.patch(
     "argparse.ArgumentParser.parse_args",
-    return_value=argparse.Namespace(f="./examples/coinbasepro-scheduler-weekly.yaml"),
+    return_value=argparse.Namespace(f="./examples/cbpa-no-alerts.yaml"),
 )
-def test_main_weekly(mock_args: mock.MagicMock) -> None:
+@mock.patch(
+    "cbpa.main.create_coinbasepro_auth_client",
+    return_value=MockCoinbaseClient(),
+)
+@mock.patch(
+    "cbpa.services.discord.DiscordService.send_alert",
+    return_value=None,
+)
+def test_main_without_alerts(
+    mock_discord_service: mock.MagicMock,
+    mock_coinbase_client: mock.MagicMock,
+    mock_args: mock.MagicMock,
+) -> None:
     main()
 
 
 @mock.patch(
     "argparse.ArgumentParser.parse_args",
-    return_value=argparse.Namespace(f="./examples/coinbasepro-scheduler-seconds.yaml"),
+    return_value=argparse.Namespace(f="./examples/cbpa-trigger-over-limit.yaml"),
 )
-def test_main_seconds(mock_args: mock.MagicMock) -> None:
+@mock.patch(
+    "cbpa.main.create_coinbasepro_auth_client",
+    return_value=MockCoinbaseClient(),
+)
+@mock.patch(
+    "cbpa.services.discord.DiscordService.send_alert",
+    return_value=None,
+)
+def test_main_trigger_over_limit(
+    mock_discord_service: mock.MagicMock,
+    mock_coinbase_client: mock.MagicMock,
+    mock_args: mock.MagicMock,
+) -> None:
     main()
 
 
 @mock.patch(
     "argparse.ArgumentParser.parse_args",
-    return_value=argparse.Namespace(
-        f="./examples/coinbasepro-scheduler-daily-discord.yaml"
-    ),
+    return_value=argparse.Namespace(f="./examples/cbpa-trigger-deposit.yaml"),
 )
-def test_main_daily_with_discord_alerts(mock_args: mock.MagicMock) -> None:
+@mock.patch(
+    "cbpa.main.create_coinbasepro_auth_client",
+    return_value=MockCoinbaseClient(),
+)
+@mock.patch(
+    "cbpa.services.discord.DiscordService.send_alert",
+    return_value=None,
+)
+def test_main_trigger_deposit(
+    mock_discord_service: mock.MagicMock,
+    mock_coinbase_client: mock.MagicMock,
+    mock_args: mock.MagicMock,
+) -> None:
     main()

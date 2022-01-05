@@ -3,7 +3,7 @@
 ./scripts/lint.sh
 
 pytest \
---cov=coinbasepro_scheduler \
+--cov=cbpa \
 --cov=tests \
 --cov-report=term-missing \
 --cov-report=xml -o console_output_style=progress \

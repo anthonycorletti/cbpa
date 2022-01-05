@@ -1,7 +1,7 @@
 from pydantic import BaseModel
 from pydantic.types import PositiveInt
 
-from coinbasepro_scheduler.schemas.currency import CCC, FCC
+from cbpa.schemas.currency import CCC, FCC
 
 
 class Buy(BaseModel):

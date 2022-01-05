@@ -1,6 +1,6 @@
 import yaml
 
-from coinbasepro_scheduler.schemas.config import Config
+from cbpa.schemas.config import Config
 
 
 class ConfigService:

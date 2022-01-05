@@ -1,6 +1,6 @@
 [run]
 source =
-    coinbasepro_scheduler
+    cbpa
     tests
 
 omit =

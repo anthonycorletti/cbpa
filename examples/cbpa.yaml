@@ -1,0 +1,22 @@
+---
+api:
+  key: "myKey"
+  secret: "mySecret"
+  passphrase: "myPassphrase"
+  url: "https://api.pro.coinbase.com"
+discord:
+  webhook: https://discord.com/api/webhooks/123/abc
+account:
+  auto_funding_limit: 20
+  fiat_currency: USD
+  source: default
+buys:
+  - send_currency: USD
+    send_amount: 2
+    receive_currency: BTC
+  - send_currency: USD
+    send_amount: 2
+    receive_currency: ETH
+  - send_currency: USD
+    send_amount: 2
+    receive_currency: DOGE

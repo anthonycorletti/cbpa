@@ -1,4 +1,4 @@
-from coinbasepro_scheduler.schemas.buy import Buy
+from cbpa.schemas.buy import Buy
 
 
 def test_pair() -> None:

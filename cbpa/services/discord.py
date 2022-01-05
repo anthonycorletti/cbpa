@@ -1,14 +1,14 @@
 from discord import RequestsWebhookAdapter, Webhook
 
-from coinbasepro_scheduler.schemas.config import Config
+from cbpa.schemas.config import Config
 
 
-class DiscordAlertService:
+class DiscordService:
     def __init__(self) -> None:
         pass
 
     def send_alert(self, config: Config, message: str) -> None:
-        if config.discord and config.discord.enabled:
+        if config.discord:
             webhook = Webhook.from_url(
                 config.discord.webhook,
                 adapter=RequestsWebhookAdapter(),

@@ -1,8 +1,8 @@
 FROM python:3.9.6-slim
 
-WORKDIR /scheduler
+WORKDIR /cbpa
 
-COPY . /scheduler
+COPY . /cbpa
 
 RUN apt-get update -y \
     && apt-get install build-essential -y \

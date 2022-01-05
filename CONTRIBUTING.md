@@ -62,7 +62,7 @@ First, create your schedule file. You can find examples in the [examples dir](./
 To run the scheduler with just python;
 
 ```sh
-python coinbasepro_scheduler/main.py -f path-to-my-schedule/file.yaml
+python cbpa/main.py -f path-to-my-schedule/file.yaml
 ```
 
 To run the scheduler with docker;
