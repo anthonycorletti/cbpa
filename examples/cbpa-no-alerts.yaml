@@ -7,7 +7,6 @@ api:
 account:
   auto_funding_limit: 20
   fiat_currency: USD
-  source: default
 buys:
   - send_currency: USD
     send_amount: 2
