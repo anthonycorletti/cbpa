@@ -1,10 +1,11 @@
-import argparse
 import os
 import traceback
 from datetime import datetime
 
 import coinbasepro
+import typer
 
+from cbpa import __version__
 from cbpa.logger import logger
 from cbpa.schemas.config import Config
 from cbpa.services.account import AccountService
@@ -13,19 +14,14 @@ from cbpa.services.config import ConfigService
 from cbpa.services.discord import DiscordService
 
 os.environ["TZ"] = "UTC"
+app = typer.Typer(name="Coinbase Pro Automation")
 
 
-def get_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser()
-    parser.add_argument("-f", type=str, help="filepath to the yaml config")
-    return parser.parse_args()
-
-
-def create_config(args: argparse.Namespace) -> Config:
+def create_config(filepath: str) -> Config:
     config_service = ConfigService()
-    logger.info(f"🤓 Reading config file at {args.f}.")
-    config = config_service.load_config(filepath=args.f)
-    logger.info(f"👏 Successfully parsed {args.f}.")
+    logger.info(f"🤓 Reading config file at {filepath}.")
+    config = config_service.load_config(filepath=filepath)
+    logger.info(f"👏 Successfully parsed {filepath}.")
     return config
 
 
@@ -65,10 +61,22 @@ def create_buy_service(
     return buy_service
 
 
-def main() -> None:
+@app.command("version", help="prints the version")
+def _version() -> None:
+    typer.echo(__version__)
+
+
+@app.command("run", help="executes buy orders listed in a config file")
+def _run(
+    filepath: str = typer.Option(
+        ...,
+        "-f",
+        "--file",
+        help="filepath to the yaml config",
+    )
+) -> None:
     start = datetime.now()
-    args = get_args()
-    config = create_config(args=args)
+    config = create_config(filepath=filepath)
     discord_service = DiscordService()
     start_message = f"🤖 Starting cbpa ({start.isoformat()})"
     logger.info(start_message)
@@ -131,7 +139,3 @@ def main() -> None:
     end_message = f"🤖 cbpa completed! Ran for {duration.total_seconds()} seconds."
     logger.info(end_message)
     discord_service.send_alert(config=config, message=end_message)
-
-
-if __name__ == "__main__":
-    main()  # pragma: no cover

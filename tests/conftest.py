@@ -1,13 +1,12 @@
 import os
+from typing import Generator
 
 import pytest
-
-from cbpa.services.config import ConfigService
+from typer.testing import CliRunner
 
 os.environ["TZ"] = "UTC"
-config_service = ConfigService()
 
 
-@pytest.fixture(scope="function", autouse=True)
-def _function() -> None:
-    pass
+@pytest.fixture(scope="function")
+def cli_runner() -> Generator:
+    yield CliRunner()
