@@ -145,8 +145,6 @@ tmp/
 
 .git
 .github
-docs
-kubernetes
 scripts
 tests
 .coveragerc
@@ -158,3 +156,4 @@ tests
 mypy.ini
 minikube-darwin-amd64
 .idea
+configs

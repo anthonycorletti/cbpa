@@ -10,3 +10,5 @@ RUN apt-get update -y \
     && pip install flit \
     && FLIT_ROOT_INSTALL=1 flit install --deps production \
     && rm -rf $(pip cache dir)
+
+CMD /bin/sh
