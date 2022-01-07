@@ -1,6 +1,6 @@
 import os
-import traceback
 from datetime import datetime
+from typing import Optional
 
 import coinbasepro
 import typer
@@ -8,6 +8,7 @@ import typer
 from cbpa import __version__
 from cbpa.logger import logger
 from cbpa.schemas.config import Config
+from cbpa.server import _run_server
 from cbpa.services.account import AccountService
 from cbpa.services.buy import BuyService
 from cbpa.services.config import ConfigService
@@ -50,12 +51,15 @@ def create_account_service(
 
 
 def create_buy_service(
-    config: Config, coinbasepro_client: coinbasepro.AuthenticatedClient
+    config: Config,
+    coinbasepro_client: coinbasepro.AuthenticatedClient,
+    account_service: AccountService,
 ) -> BuyService:
     logger.info("💸 Creating buy service.")
     buy_service = BuyService(
         config=config,
         coinbasepro_client=coinbasepro_client,
+        account_service=account_service,
     )
     logger.info("👏 Successfully created buy service.")
     return buy_service
@@ -88,54 +92,29 @@ def _run(
     buy_service = create_buy_service(
         config=config,
         coinbasepro_client=coinbasepro_client,
+        account_service=account_service,
     )
     done = {buy.receive_currency.value: False for buy in config.buys}
 
-    def run() -> None:
-        try:
-            for buy in config.buys:
-                if not done[buy.receive_currency.value]:
-                    buy_total = buy.send_amount
-                    current_funds = account_service.get_balance_for_currency(
-                        config.account.fiat_currency
-                    )
-                    if current_funds >= buy_total:
-                        buy_service.place_market_order(
-                            buy, config.account.fiat_currency
-                        )
-                        done[buy.receive_currency.value] = True
-                    elif current_funds < buy_total:
-                        response = account_service.add_funds(
-                            buy_total=buy_total,
-                            current_funds=current_funds,
-                            max_fund=config.account.auto_funding_limit,
-                            fiat=config.account.fiat_currency,
-                        )
-                        if response.status == "Error":
-                            logger.error(response.message)
-                            discord_service.send_alert(
-                                config=config, message=response.message
-                            )
-                        elif response.status == "Success":
-                            buy_service.place_market_order(
-                                buy, config.account.fiat_currency
-                            )
-                            done[buy.receive_currency.value] = True
-                        else:
-                            logger.info(
-                                f"Unhandled response status {response.status}."
-                                " Moving on."
-                            )
-            if not all(done.values()):
-                run()
-        except Exception:
-            logger.error("Unhandled general exception occurred.")
-            logger.error(traceback.format_exc())
-            run()
+    buy_service.run(done=done)
 
-    run()
     end = datetime.now()
     duration = end - start
     end_message = f"🤖 cbpa completed! Ran for {duration.total_seconds()} seconds."
     logger.info(end_message)
     discord_service.send_alert(config=config, message=end_message)
+
+
+@app.command("server", help="run an api server to handle automated buys")
+def _server(
+    port: Optional[str] = typer.Option(
+        None, "--port", "-p", help="the port to run uvicon on"
+    ),
+    host: str = typer.Option(
+        "0.0.0.0", "--host", "-h", help="the port to run uvicon on"
+    ),
+) -> None:
+    if port is None:
+        port = os.getenv("PORT", "8002")
+    assert port is not None
+    _run_server(port=int(port), host=host)

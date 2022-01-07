@@ -157,3 +157,5 @@ mypy.ini
 minikube-darwin-amd64
 .idea
 configs
+examples
+docs

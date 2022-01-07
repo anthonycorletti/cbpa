@@ -1,7 +1,8 @@
 FROM python:3.9.6-slim
 
-WORKDIR /cbpa
+ENV PYTHONUNBUFFERED True
 
+WORKDIR /cbpa
 COPY . /cbpa
 
 RUN apt-get update -y \
@@ -11,4 +12,4 @@ RUN apt-get update -y \
     && FLIT_ROOT_INSTALL=1 flit install --deps production \
     && rm -rf $(pip cache dir)
 
-CMD /bin/sh
+CMD ["cbpa", "server", "-p", $PORT]
