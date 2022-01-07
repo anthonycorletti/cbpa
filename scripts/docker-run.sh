@@ -1,3 +1,5 @@
 #!/bin/sh -e
 
-docker run -it gcr.io/$(gcloud config list --format 'value(core.project)')/cbpa ${@}
+PROJECT_ID=$(gcloud config list --format 'value(core.project)')
+VERSION=${VERSION:=latest}
+docker run -it gcr.io/${PROJECT_ID}/cbpa:${VERSION} /bin/sh
