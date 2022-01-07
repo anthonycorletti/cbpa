@@ -4,18 +4,22 @@ from typing import Optional
 
 import coinbasepro
 import typer
+import uvicorn
+import yaml
+from fastapi import FastAPI
+from google.cloud import secretmanager
 
 from cbpa import __version__
 from cbpa.logger import logger
+from cbpa.schemas.buy import BuyResponse
 from cbpa.schemas.config import Config
-from cbpa.server import _run_server
+from cbpa.schemas.health import HealthcheckResponse
 from cbpa.services.account import AccountService
 from cbpa.services.buy import BuyService
 from cbpa.services.config import ConfigService
 from cbpa.services.discord import DiscordService
 
 os.environ["TZ"] = "UTC"
-app = typer.Typer(name="Coinbase Pro Automation")
 
 
 def create_config(filepath: str) -> Config:
@@ -24,6 +28,16 @@ def create_config(filepath: str) -> Config:
     config = config_service.load_config(filepath=filepath)
     logger.info(f"👏 Successfully parsed {filepath}.")
     return config
+
+
+def retrieve_config_from_secret_manager(
+    project_id: str, secret_id: str, version_id: str = "latest"
+) -> Config:
+    client = secretmanager.SecretManagerServiceClient()
+    name = f"projects/{project_id}/secrets/{secret_id}/versions/{version_id}"
+    response = client.access_secret_version(request={"name": name})
+    payload = response.payload.data.decode("UTF-8")
+    return Config(**yaml.safe_load(payload))
 
 
 def create_coinbasepro_auth_client(config: Config) -> coinbasepro.AuthenticatedClient:
@@ -65,22 +79,8 @@ def create_buy_service(
     return buy_service
 
 
-@app.command("version", help="prints the version")
-def _version() -> None:
-    typer.echo(__version__)
-
-
-@app.command("run", help="executes buy orders listed in a config file")
-def _run(
-    filepath: str = typer.Option(
-        ...,
-        "-f",
-        "--file",
-        help="filepath to the yaml config",
-    )
-) -> None:
+def _main(config: Config) -> None:
     start = datetime.now()
-    config = create_config(filepath=filepath)
     discord_service = DiscordService()
     start_message = f"🤖 Starting cbpa ({start.isoformat()})"
     logger.info(start_message)
@@ -105,6 +105,69 @@ def _run(
     discord_service.send_alert(config=config, message=end_message)
 
 
+#
+#   create the api
+#
+api = FastAPI(
+    title="Coinbase Pro Automation API",
+    description="Automate buys for your favourite cryptocurrencies.",
+    version=__version__,
+)
+
+
+#
+#   create api routes
+#
+@api.get("/healthcheck", response_model=HealthcheckResponse, tags=["health"])
+def healthcheck() -> HealthcheckResponse:
+    message = "Dollar cost averaging."
+    logger.debug(message)
+    return HealthcheckResponse(
+        api_version=__version__,
+        message=message,
+        time=datetime.now(),
+    )
+
+
+@api.post("/buy", response_model=BuyResponse, tags=["buy"])
+def buy() -> BuyResponse:
+    logger.info("Buy API request initiated.")
+    config = retrieve_config_from_secret_manager(
+        project_id=os.environ["PROJECT_ID"], secret_id=os.environ["SECRET_ID"]
+    )
+    _main(config=config)
+    logger.info("Buy API request completed.")
+    return BuyResponse(message="Buy API request completed.")
+
+
+#
+#   create the cli
+#
+typer_app_name = "Coinbase Pro Automation"
+app = typer.Typer(name=typer_app_name)
+
+
+#
+#   create cli commands
+#
+@app.command("version", help="prints the version")
+def _version() -> None:
+    typer.echo(__version__)
+
+
+@app.command("run", help="executes buy orders listed in a config file")
+def _run(
+    filepath: str = typer.Option(
+        ...,
+        "-f",
+        "--file",
+        help="filepath to the yaml config",
+    )
+) -> None:
+    config = create_config(filepath=filepath)
+    _main(config=config)
+
+
 @app.command("server", help="run an api server to handle automated buys")
 def _server(
     port: Optional[str] = typer.Option(
@@ -117,4 +180,4 @@ def _server(
     if port is None:
         port = os.getenv("PORT", "8002")
     assert port is not None
-    _run_server(port=int(port), host=host)
+    uvicorn.run(api, port=int(port), host=host)
