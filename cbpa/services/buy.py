@@ -3,6 +3,7 @@ import traceback
 from typing import Dict
 
 import coinbasepro
+from coinbasepro.exceptions import CoinbaseAPIError
 
 from cbpa.logger import logger
 from cbpa.schemas.buy import Buy
@@ -49,12 +50,15 @@ class BuyService:
             self.discord_service.send_alert(
                 config=self.config, message=purchase_success_message
             )
-        except coinbasepro.exceptions.CoinbaseAPIError as e:
-            logger.error(
-                f"Coinbase returned an API error: {e}. "
-                f"Order {order_id} was not created just yet. "
-                "Retrying order detail retrieval in 2 seconds."
-            )
+        except (CoinbaseAPIError, TypeError) as e:
+            if isinstance(e, CoinbaseAPIError):
+                logger.error(
+                    f"Exception caught while getting order details: {e}. "
+                    f"Order {order_id} was not created just yet. "
+                    "Retrying order detail retrieval in 2 seconds."
+                )
+            elif isinstance(e, TypeError):
+                logger.error(f"Failed to parse the order details: {e}. Trying again.")
             time.sleep(2)
             self.get_placed_order_details(buy=buy, response=response)
 
