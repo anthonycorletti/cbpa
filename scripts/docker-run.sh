@@ -1,3 +1,5 @@
 #!/bin/sh -e
 
-docker run -d cbps python cbpa/main.py -f ${@}
+PROJECT_ID=$(gcloud config list --format 'value(core.project)')
+VERSION=${VERSION:=latest}
+docker run -it gcr.io/${PROJECT_ID}/cbpa:${VERSION} /bin/sh

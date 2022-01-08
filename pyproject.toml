@@ -6,13 +6,18 @@ build-backend = "flit_core.buildapi"
 name = "cbpa"
 authors = [{name = "Anthony Corletti", email = "anthcor@gmail.com"}]
 dynamic = ["version", "description"]
+readme = "README.md"
 requires-python = ">=3.9.6"
 dependencies = [
     "typer==0.4.0",
+    "fastapi==0.70.1",
+    "uvicorn==0.16.0",
+    "gunicorn==20.1.0",
     "pydantic==1.9.0",
     "coinbasepro==0.3.0",
     "PyYaml==6.0",
-    "discord==1.7.3"
+    "discord==1.7.3",
+    "google-cloud-secret-manager==2.8.0"
 ]
 
 [project.scripts]

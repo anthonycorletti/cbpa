@@ -2,4 +2,4 @@
 
 PROJECT_ID=$(gcloud config list --format 'value(core.project)')
 VERSION=${VERSION:=latest}
-docker build -t gcr.io/${PROJECT_ID}/cbpa:${VERSION} .
+docker run -it -p 8002:8002 gcr.io/${PROJECT_ID}/cbpa:${VERSION}

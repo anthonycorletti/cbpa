@@ -11,3 +11,7 @@ class Buy(BaseModel):
 
     def pair(self) -> str:
         return f"{self.receive_currency}-{self.send_currency}"
+
+
+class BuyResponse(BaseModel):
+    message: str

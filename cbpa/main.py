@@ -1,20 +1,25 @@
 import os
-import traceback
 from datetime import datetime
+from typing import Optional
 
 import coinbasepro
 import typer
+import uvicorn
+import yaml
+from fastapi import FastAPI
+from google.cloud import secretmanager
 
 from cbpa import __version__
 from cbpa.logger import logger
+from cbpa.schemas.buy import BuyResponse
 from cbpa.schemas.config import Config
+from cbpa.schemas.health import HealthcheckResponse
 from cbpa.services.account import AccountService
 from cbpa.services.buy import BuyService
 from cbpa.services.config import ConfigService
 from cbpa.services.discord import DiscordService
 
 os.environ["TZ"] = "UTC"
-app = typer.Typer(name="Coinbase Pro Automation")
 
 
 def create_config(filepath: str) -> Config:
@@ -23,6 +28,16 @@ def create_config(filepath: str) -> Config:
     config = config_service.load_config(filepath=filepath)
     logger.info(f"👏 Successfully parsed {filepath}.")
     return config
+
+
+def retrieve_config_from_secret_manager(
+    project_id: str, secret_id: str, version_id: str = "latest"
+) -> Config:
+    client = secretmanager.SecretManagerServiceClient()
+    name = f"projects/{project_id}/secrets/{secret_id}/versions/{version_id}"
+    response = client.access_secret_version(request={"name": name})
+    payload = response.payload.data.decode("UTF-8")
+    return Config(**yaml.safe_load(payload))
 
 
 def create_coinbasepro_auth_client(config: Config) -> coinbasepro.AuthenticatedClient:
@@ -50,17 +65,91 @@ def create_account_service(
 
 
 def create_buy_service(
-    config: Config, coinbasepro_client: coinbasepro.AuthenticatedClient
+    config: Config,
+    coinbasepro_client: coinbasepro.AuthenticatedClient,
+    account_service: AccountService,
 ) -> BuyService:
     logger.info("💸 Creating buy service.")
     buy_service = BuyService(
         config=config,
         coinbasepro_client=coinbasepro_client,
+        account_service=account_service,
     )
     logger.info("👏 Successfully created buy service.")
     return buy_service
 
 
+def _main(config: Config) -> None:
+    start = datetime.now()
+    discord_service = DiscordService()
+    start_message = f"🤖 Starting cbpa ({start.isoformat()})"
+    logger.info(start_message)
+    discord_service.send_alert(config=config, message=start_message)
+    coinbasepro_client = create_coinbasepro_auth_client(config=config)
+    account_service = create_account_service(
+        config=config, coinbasepro_client=coinbasepro_client
+    )
+    buy_service = create_buy_service(
+        config=config,
+        coinbasepro_client=coinbasepro_client,
+        account_service=account_service,
+    )
+    done = {buy.receive_currency.value: False for buy in config.buys}
+
+    buy_service.run(done=done)
+
+    end = datetime.now()
+    duration = end - start
+    end_message = f"🤖 cbpa completed! Ran for {duration.total_seconds()} seconds."
+    logger.info(end_message)
+    discord_service.send_alert(config=config, message=end_message)
+
+
+#
+#   create the api
+#
+api = FastAPI(
+    title="Coinbase Pro Automation API",
+    description="Automate buys for your favourite cryptocurrencies.",
+    version=__version__,
+)
+
+
+#
+#   create api routes
+#
+@api.get("/healthcheck", response_model=HealthcheckResponse, tags=["health"])
+def healthcheck() -> HealthcheckResponse:
+    message = "Dollar cost averaging."
+    logger.debug(message)
+    return HealthcheckResponse(
+        api_version=__version__,
+        message=message,
+        time=datetime.now(),
+    )
+
+
+@api.post("/buy", response_model=BuyResponse, tags=["buy"])
+def buy() -> BuyResponse:
+    logger.info("Buy API request initiated.")
+    config = retrieve_config_from_secret_manager(
+        project_id=os.environ["PROJECT_ID"], secret_id=os.environ["SECRET_ID"]
+    )
+    _main(config=config)
+    logger.info("Buy API request completed.")
+    return BuyResponse(message="Buy API request completed.")
+
+
+#
+#   create the cli
+#
+typer_app_name = "Coinbase Pro Automation"
+app = typer.Typer(name=typer_app_name)
+
+
+#
+#   create cli commands
+#
 @app.command("version", help="prints the version")
 def _version() -> None:
     typer.echo(__version__)
@@ -75,67 +164,20 @@ def _run(
         help="filepath to the yaml config",
     )
 ) -> None:
-    start = datetime.now()
     config = create_config(filepath=filepath)
-    discord_service = DiscordService()
-    start_message = f"🤖 Starting cbpa ({start.isoformat()})"
-    logger.info(start_message)
-    discord_service.send_alert(config=config, message=start_message)
-    coinbasepro_client = create_coinbasepro_auth_client(config=config)
-    account_service = create_account_service(
-        config=config, coinbasepro_client=coinbasepro_client
-    )
-    buy_service = create_buy_service(
-        config=config,
-        coinbasepro_client=coinbasepro_client,
-    )
-    done = {buy.receive_currency.value: False for buy in config.buys}
+    _main(config=config)
 
-    def run() -> None:
-        try:
-            for buy in config.buys:
-                if not done[buy.receive_currency.value]:
-                    buy_total = buy.send_amount
-                    current_funds = account_service.get_balance_for_currency(
-                        config.account.fiat_currency
-                    )
-                    if current_funds >= buy_total:
-                        buy_service.place_market_order(
-                            buy, config.account.fiat_currency
-                        )
-                        done[buy.receive_currency.value] = True
-                    elif current_funds < buy_total:
-                        response = account_service.add_funds(
-                            buy_total=buy_total,
-                            current_funds=current_funds,
-                            max_fund=config.account.auto_funding_limit,
-                            fiat=config.account.fiat_currency,
-                        )
-                        if response.status == "Error":
-                            logger.error(response.message)
-                            discord_service.send_alert(
-                                config=config, message=response.message
-                            )
-                        elif response.status == "Success":
-                            buy_service.place_market_order(
-                                buy, config.account.fiat_currency
-                            )
-                            done[buy.receive_currency.value] = True
-                        else:
-                            logger.info(
-                                f"Unhandled response status {response.status}."
-                                " Moving on."
-                            )
-            if not all(done.values()):
-                run()
-        except Exception:
-            logger.error("Unhandled general exception occurred.")
-            logger.error(traceback.format_exc())
-            run()
 
-    run()
-    end = datetime.now()
-    duration = end - start
-    end_message = f"🤖 cbpa completed! Ran for {duration.total_seconds()} seconds."
-    logger.info(end_message)
-    discord_service.send_alert(config=config, message=end_message)
+@app.command("server", help="run an api server to handle automated buys")
+def _server(
+    port: Optional[str] = typer.Option(
+        None, "--port", "-p", help="the port to run uvicon on"
+    ),
+    host: str = typer.Option(
+        "0.0.0.0", "--host", "-h", help="the port to run uvicon on"
+    ),
+) -> None:
+    if port is None:
+        port = os.getenv("PORT", "8002")
+    assert port is not None
+    uvicorn.run(api, port=int(port), host=host)
