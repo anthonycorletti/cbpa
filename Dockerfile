@@ -12,4 +12,4 @@ RUN apt-get update -y \
     && FLIT_ROOT_INSTALL=1 flit install --deps production \
     && rm -rf $(pip cache dir)
 
-CMD gunicorn cbpa.server:api -c cbpa/gunicorn_config.py
+CMD gunicorn cbpa.main:api -c cbpa/gunicorn_config.py
