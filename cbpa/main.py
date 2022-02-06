@@ -171,10 +171,10 @@ def _run(
 @app.command("server", help="run an api server to handle automated buys")
 def _server(
     port: Optional[str] = typer.Option(
-        None, "--port", "-p", help="the port to run uvicon on"
+        None, "--port", "-p", help="The port to run uvicorn on."
     ),
     host: str = typer.Option(
-        "0.0.0.0", "--host", "-h", help="the port to run uvicon on"
+        "0.0.0.0", "--host", "-h", help="The host to run uvicorn on."
     ),
 ) -> None:
     if port is None:
