@@ -1,5 +1,13 @@
 # cbpa
 
+---
+
+:warning: `cbpa` is now deprecated because [Coinbase Pro is sunsetting for Coinbase Advanced Trade](https://www.coinbase.com/blog/hello-advanced-trade-goodbye-coinbase-pro). You can check out the documentation for the new Advanced Trade API [here](https://docs.cloud.coinbase.com/advanced-trade-api/docs).
+
+I have no plans to update this library to use the new API, and will consider making a new library for the new API if users express interest. Cheers!
+
+---
+
 Coinbase Pro Automation for making buy orders from a default bank account.
 
 ## Quickstart
